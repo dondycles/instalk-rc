@@ -5,6 +5,12 @@ import { Separator } from "./ui/separator";
 import { Input } from "./ui/input";
 import { user } from "@/lib/global";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import likePost from "@/app/actions/like-post";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import getPostLikes from "@/app/actions/get-postlikes";
+import unlikePost from "@/app/actions/unlike-post";
 
 export default function PostCard({
   post,
@@ -13,8 +19,56 @@ export default function PostCard({
   post: PostTypes;
   user?: user;
 }) {
+  const supabase = createClient();
+  const [isLikingPost, setIsLikingPost] = useState(false);
+  const handleLike = async () => {
+    if (!post) return;
+    if (!user) return;
+    setIsLikingPost(true);
+    if (isLiked) {
+      await unlikePost(post, user);
+      setTimeout(() => {
+        setIsLikingPost(false);
+      }, 1000);
+      return;
+    }
+    await likePost(post);
+    setTimeout(() => {
+      setIsLikingPost(false);
+    }, 1000);
+  };
+
+  const { data: latestPostLikes, refetch: refetchLatestLikes } = useQuery({
+    queryKey: ["post_likes", post?.id],
+    queryFn: async () => {
+      const { data } = await getPostLikes(post);
+      return data;
+    },
+    initialData: post.post_likes,
+  });
+
+  const isLiked = Boolean(
+    latestPostLikes?.find((liker) => liker.user === user?.id)
+  );
+
+  useEffect(() => {
+    const channels = supabase
+      .channel(`post_likes${post.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "post_likes" },
+        () => {
+          refetchLatestLikes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channels);
+    };
+  }, [supabase]);
   return (
-    <Card key={post.id} className="">
+    <Card key={post.id}>
       <CardHeader className="text-sm">
         <UserHoverCard user={post?.users} currentUser={user}>
           <div className="flex gap-1 items-start">
@@ -47,12 +101,17 @@ export default function PostCard({
         <Separator />
         <div className="text-xs text-muted-foreground flex gap-4 justify-start w-full">
           <button className="hover:underline">
-            {post.post_likes?.length} Likes
+            {latestPostLikes?.length} Likes
           </button>
           <button className="hover:underline">Comments</button>
         </div>
         <div className="flex flex-row gap-4 w-full">
-          <Button size={"icon"}>
+          <Button
+            disabled={isLikingPost}
+            onClick={handleLike}
+            size={"icon"}
+            variant={isLiked ? "default" : "ghost"}
+          >
             <ThumbsUp className="size-4" />
           </Button>
           <Input className="flex-1" placeholder="Comment" />

@@ -50,7 +50,7 @@ export default function FeedSection({ user }: { user?: user }) {
 
   useEffect(() => {
     const channels = supabase
-      .channel("custom-all-channel")
+      .channel("posts")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "posts" },
