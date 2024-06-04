@@ -8,7 +8,10 @@ export default async function getPosts() {
     .from("posts")
     .select(
       "*,users(username,fullname) ,post_likes(*, users(username,fullname))"
-    );
+    )
+    .order("created_at", {
+      ascending: false,
+    });
 
   if (error) return { error: error };
   return { data: data };
