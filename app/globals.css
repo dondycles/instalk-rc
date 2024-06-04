@@ -77,6 +77,3 @@
 * {
   @apply tracking-tighter;
 }
-.btn-text {
-  @apply font-bold;
-}

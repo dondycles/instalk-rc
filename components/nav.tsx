@@ -110,7 +110,7 @@ export default function FeedNav({ user }: { user?: user }) {
           </div>
         )}
       </div>
-      {user && (
+      {user ? (
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -142,6 +142,10 @@ export default function FeedNav({ user }: { user?: user }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </>
+      ) : (
+        <Button asChild>
+          <Link href={"/login"}>Log In</Link>
+        </Button>
       )}
     </nav>
   );

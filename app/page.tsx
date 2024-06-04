@@ -7,16 +7,19 @@ export default function Home() {
       <div className="m-auto">
         <h1 className="font-black text-4xl">Instalky.</h1>
         <p className="mb-2">Talk to everyone, instantly.</p>
-        <div className="flex gap-2 ">
+        <div className="flex gap-4 ">
           <Button asChild className="flex-1 btn-text" variant={"outline"}>
             <Link href={"/login"} className="">
               Log In
             </Link>
           </Button>
-          <Button className="flex-1 btn-text">
+          <Button asChild className="flex-1 btn-text">
             <Link href={"/signup"}>Sign Up</Link>
           </Button>
         </div>
+        <Button asChild className="mt-4 w-full">
+          <Link href={"/feed"}>See what&apos;s latest</Link>
+        </Button>
       </div>
     </main>
   );

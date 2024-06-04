@@ -1,4 +1,4 @@
-import { Globe2, Lock, ThumbsUp, UserCircle } from "lucide-react";
+import { Globe2, Loader2, Lock, ThumbsUp, UserCircle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
@@ -11,6 +11,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import getPostLikes from "@/app/actions/get-postlikes";
 import unlikePost from "@/app/actions/unlike-post";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import { ScrollArea } from "./ui/scroll-area";
 
 export default function PostCard({
   post,
@@ -100,22 +103,58 @@ export default function PostCard({
       <CardFooter className="flex flex-col gap-4">
         <Separator />
         <div className="text-xs text-muted-foreground flex gap-4 justify-start w-full">
-          <button className="hover:underline">
-            {latestPostLikes?.length} Likes
-          </button>
+          <Dialog>
+            <DialogTrigger>
+              <button
+                disabled={!latestPostLikes?.length}
+                className="hover:underline"
+              >
+                {latestPostLikes?.length} Likes
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <ScrollArea>
+                <div className="flex flex-col gap-4 max-h-[60dvh]">
+                  {latestPostLikes?.map((liker: PostLikeTypes) => {
+                    return (
+                      <Card key={liker.id}>
+                        <CardHeader>
+                          <div className="flex flex-row items-start gap-2">
+                            <UserCircle className="text-muted-foreground size-10 shrink-0" />
+                            <div className="text-sm text-muted-foreground">
+                              <p className="font-semibold">
+                                {liker.users?.fullname}
+                              </p>
+                              <p>@{liker.users?.username}</p>
+                            </div>
+                          </div>
+                        </CardHeader>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </DialogContent>
+          </Dialog>
           <button className="hover:underline">Comments</button>
         </div>
-        <div className="flex flex-row gap-4 w-full">
-          <Button
-            disabled={isLikingPost}
-            onClick={handleLike}
-            size={"icon"}
-            variant={isLiked ? "default" : "ghost"}
-          >
-            <ThumbsUp className="size-4" />
-          </Button>
-          <Input className="flex-1" placeholder="Comment" />
-        </div>
+        {user && (
+          <div className="flex flex-row gap-4 w-full">
+            <Button
+              disabled={isLikingPost}
+              onClick={handleLike}
+              size={"icon"}
+              variant={isLiked ? "default" : "ghost"}
+            >
+              {isLikingPost ? (
+                <Loader2 className="animate-spin size-4" />
+              ) : (
+                <ThumbsUp className="size-4" />
+              )}
+            </Button>
+            <Input className="flex-1" placeholder="Comment" />
+          </div>
+        )}
       </CardFooter>
     </Card>
   );
