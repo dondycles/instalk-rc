@@ -9,7 +9,7 @@ export default async function getComments(data: {
   const supabase = createClient();
   const { error, data: comments } = await supabase
     .from("post_comments")
-    .select("*, users(fullname,username)")
+    .select("*, users(id,fullname,username)")
     .eq("post", data.postId)
     .order("created_at", { ascending: false })
     .limit(4);

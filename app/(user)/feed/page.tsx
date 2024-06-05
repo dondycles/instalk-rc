@@ -7,14 +7,16 @@ import { Loader2 } from "lucide-react";
 
 export default function Feed() {
   const queryClient = useQueryClient();
-  const { data: userData, isLoading: userDataLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: async () => await getCurrentUser(),
-    initialData: () => {
-      return queryClient.getQueryData(["user"]);
-    },
-  });
-  if (userDataLoading)
+  const { data: currentUserData, isLoading: currentUserDataLoading } = useQuery(
+    {
+      queryKey: ["user"],
+      queryFn: async () => await getCurrentUser(),
+      initialData: () => {
+        return queryClient.getQueryData(["user"]);
+      },
+    }
+  );
+  if (currentUserDataLoading)
     return (
       <div className="text-center text-muted-foreground text-xs flex flex-row gap-2 items-center justify-center">
         <p>Loading current user... </p>{" "}
@@ -23,7 +25,7 @@ export default function Feed() {
     );
   return (
     <main className="p-4 pb-0 h-full overflow-auto flex gap-4">
-      <FeedSection user={userData?.data} />
+      <FeedSection currentUser={currentUserData?.data} />
     </main>
   );
 }

@@ -34,7 +34,7 @@ import { useEffect, useState } from "react";
 import PostForm from "./post-form";
 import { createClient } from "@/lib/supabase/client";
 
-export default function FeedSection({ user }: { user?: user }) {
+export default function FeedSection({ currentUser }: { currentUser?: user }) {
   const supabase = createClient();
   const {
     data: posts,
@@ -82,16 +82,18 @@ export default function FeedSection({ user }: { user?: user }) {
   return (
     <ScrollArea className="h-full w-full">
       <div className="gap-4 flex flex-col overflow-auto pb-4">
-        {user && (
+        {currentUser && (
           <PostForm
             expandCreatePost={expandCreatePost}
             setExpandCreatePost={(value) => setExpandCreatePost(value)}
-            user={user}
+            currentUser={currentUser}
           />
         )}
 
         {posts?.data?.map((post) => {
-          return <PostCard key={post.id} post={post} user={user} />;
+          return (
+            <PostCard key={post.id} post={post} currentUser={currentUser} />
+          );
         })}
       </div>
     </ScrollArea>

@@ -7,7 +7,7 @@ export default async function getPosts() {
   const { data, error } = await supabase
     .from("posts")
     .select(
-      "*,users(username,fullname) ,post_likes(*, users(username,fullname)), post_comments(*, users(username, fullname))"
+      "*,users(id,username,fullname) ,post_likes(*, users(id,username,fullname)), post_comments(*, users(id,username, fullname))"
     )
     .order("created_at", {
       ascending: false,

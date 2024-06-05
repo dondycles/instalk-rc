@@ -30,11 +30,11 @@ const postSchema = z.object({
 export default function PostForm({
   expandCreatePost,
   setExpandCreatePost,
-  user,
+  currentUser,
 }: {
   expandCreatePost: boolean;
   setExpandCreatePost: (value: boolean) => void;
-  user?: user;
+  currentUser?: user;
 }) {
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
@@ -45,7 +45,7 @@ export default function PostForm({
   });
 
   async function handlePost(values: z.infer<typeof postSchema>) {
-    if (!user) return;
+    if (!currentUser) return;
     const { error } = await post(values);
     if (error)
       return form.setError("content", {
@@ -66,7 +66,7 @@ export default function PostForm({
           <Input
             onClick={() => setExpandCreatePost(true)}
             className="flex-1"
-            placeholder={`What's up, ${user?.username}?`}
+            placeholder={`What's up, ${currentUser?.username}?`}
           />
         )}
       </CardHeader>
@@ -85,7 +85,7 @@ export default function PostForm({
                     <FormControl>
                       <Textarea
                         autoFocus
-                        placeholder={`What's up, ${user?.username}?`}
+                        placeholder={`What's up, ${currentUser?.username}?`}
                         {...field}
                       />
                     </FormControl>

@@ -2,38 +2,36 @@ import { Globe2, Loader2, Lock, ThumbsUp, UserCircle } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-import { Input } from "./ui/input";
 import { user } from "@/lib/global";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import likePost from "@/app/actions/like-post";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import getPostLikes from "@/app/actions/get-postlikes";
 import unlikePost from "@/app/actions/unlike-post";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import CommentForm from "@/app/(user)/feed/comment-form";
 import getComments from "@/app/actions/get-comments";
 import CommentCard from "./comment-card";
+import UserHoverCard from "./user-hover-card";
 
 export default function PostCard({
   post,
-  user,
+  currentUser,
 }: {
   post: PostTypes;
-  user?: user;
+  currentUser?: user;
 }) {
   const supabase = createClient();
   const [showComments, setShowComments] = useState(false);
   const [isLikingPost, setIsLikingPost] = useState(false);
   const handleLike = async () => {
     if (!post) return;
-    if (!user) return;
+    if (!currentUser) return;
     setIsLikingPost(true);
     if (isLiked) {
-      await unlikePost(post, user);
+      await unlikePost(post, currentUser);
       setTimeout(() => {
         setIsLikingPost(false);
       }, 1000);
@@ -55,7 +53,7 @@ export default function PostCard({
     staleTime: 60000,
   });
   const isLiked = Boolean(
-    latestPostLikes?.find((liker) => liker.user === user?.id)
+    latestPostLikes?.find((liker) => liker.user === currentUser?.id)
   );
 
   const { data: latestPostComments, refetch: refetchLatestPostComments } =
@@ -101,29 +99,30 @@ export default function PostCard({
   return (
     <Card>
       <CardHeader className="text-sm">
-        <UserHoverCard user={post?.users} currentUser={user}>
-          <div className="flex gap-1 items-start">
-            <UserCircle className="size-10 shrink-0" />
-            <div>
-              <div className="flex items-center flex-wrap">
+        <div className="flex gap-1 items-start">
+          <UserCircle className="size-10 shrink-0" />
+          <div>
+            <div className="flex items-center flex-wrap">
+              <UserHoverCard user={post?.users} currentUser={currentUser}>
                 <p className="font-bold line-clamp-1 min-w-fit pr-1">
                   {post.users?.fullname}
                 </p>
-                <p>@{post.users?.username}</p>
-              </div>
-              <div className="flex items-center flex-wrap gap-x-1">
-                {post.privacy === "public" ? (
-                  <Globe2 className="size-3" />
-                ) : (
-                  <Lock className="size-3" />
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {new Date(post.created_at).toLocaleDateString()}
-                </p>
-              </div>
+              </UserHoverCard>
+
+              <p>@{post.users?.username}</p>
+            </div>
+            <div className="flex items-center flex-wrap gap-x-1">
+              {post.privacy === "public" ? (
+                <Globe2 className="size-3" />
+              ) : (
+                <Lock className="size-3" />
+              )}
+              <p className="text-xs text-muted-foreground">
+                {new Date(post.created_at).toLocaleDateString()}
+              </p>
             </div>
           </div>
-        </UserHoverCard>
+        </div>
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-line">{post.content}</p>
@@ -173,10 +172,16 @@ export default function PostCard({
         </div>
         {showComments &&
           latestPostComments?.map((comment: PostCommentTypes) => {
-            return <CommentCard comment={comment} key={comment.id} />;
+            return (
+              <CommentCard
+                comment={comment}
+                key={comment.id}
+                currentUser={currentUser}
+              />
+            );
           })}
 
-        {user && (
+        {currentUser && (
           <div className="flex flex-row gap-4 w-full">
             <Button
               disabled={isLikingPost}
@@ -197,31 +202,3 @@ export default function PostCard({
     </Card>
   );
 }
-
-const UserHoverCard = ({
-  children,
-  user,
-  currentUser,
-}: {
-  children: React.ReactNode;
-  user?: user | null;
-  currentUser?: user | null;
-}) => {
-  return (
-    <HoverCard openDelay={250}>
-      <HoverCardTrigger>{children}</HoverCardTrigger>
-      <HoverCardContent className="w-fit gap-2 flex flex-col" align="start">
-        <div className="flex flex-row gap-1 items-start">
-          <UserCircle className="size-10 shrink-0" />
-          <div className="flex flex-col ">
-            <p className="font-bold line-clamp-1 min-w-fit pr-1">
-              {user?.fullname}
-            </p>
-            <p>@{user?.username}</p>
-          </div>
-        </div>
-        {currentUser && <Button>Add Friend</Button>}
-      </HoverCardContent>
-    </HoverCard>
-  );
-};
