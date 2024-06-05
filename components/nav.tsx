@@ -74,7 +74,7 @@ export default function FeedNav({ user }: { user?: user }) {
             onClick={() => setFocused(true)}
             onMouseOver={() => setFocused(true)}
             onMouseLeave={() => setFocused(false)}
-            className="w-full p-4 absolute top-[calc(100%+16px)] left-0 h-fit z-10 bg-white border rounded-md"
+            className="fixed left-4 right-4  p-4 top-16 h-fit z-10 bg-white border rounded-md   "
           >
             <p className="text-muted-foreground text-sm mb-4">results...</p>
             <ScrollArea className="max-h-[200px] w-full">
