@@ -25,7 +25,9 @@ export default async function getFriendship(user: string, checking?: boolean) {
     .or(
       `and(binds->>receiver.eq.${user},binds->>requester.eq.${currentUser.user?.id}),and(binds->>receiver.eq.${currentUser.user?.id},binds->>requester.eq.${user})`
     )
-    .single();
+    .maybeSingle();
+
+  console.log(data, error);
   if (error) return { error: error };
   return { data: data };
 }
