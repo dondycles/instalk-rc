@@ -59,7 +59,9 @@ export default function PostForm({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center gap-4">
-        <CardTitle className="text-base">Create post</CardTitle>
+        <CardTitle className={`text-base sm:block hidden`}>
+          Create post
+        </CardTitle>
         {!expandCreatePost && (
           <Input
             onClick={() => setExpandCreatePost(true)}

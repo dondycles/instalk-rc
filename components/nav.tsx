@@ -50,7 +50,7 @@ export default function FeedNav({ user }: { user?: user }) {
 
   return (
     <nav className="flex gap-4 items-center pt-4 px-4  h-14">
-      <Link href={"/feed"} className="font-bold">
+      <Link href={"/feed"} className={`font-bold sm:block hidden`}>
         Instalk.
       </Link>
       <div className="flex-1 relative h-fit">

@@ -7,11 +7,7 @@ import { Loader2 } from "lucide-react";
 
 export default function Feed() {
   const queryClient = useQueryClient();
-  const {
-    data: userData,
-    error: userDataError,
-    isLoading: userDataLoading,
-  } = useQuery({
+  const { data: userData, isLoading: userDataLoading } = useQuery({
     queryKey: ["user"],
     queryFn: async () => await getCurrentUser(),
     initialData: () => {

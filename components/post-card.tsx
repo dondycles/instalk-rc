@@ -14,6 +14,8 @@ import unlikePost from "@/app/actions/unlike-post";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
+import CommentForm from "@/app/(user)/feed/comment-form";
+import getComments from "@/app/actions/get-comments";
 
 export default function PostCard({
   post,
@@ -23,6 +25,7 @@ export default function PostCard({
   user?: user;
 }) {
   const supabase = createClient();
+  const [showComments, setShowComments] = useState(false);
   const [isLikingPost, setIsLikingPost] = useState(false);
   const handleLike = async () => {
     if (!post) return;
@@ -48,14 +51,26 @@ export default function PostCard({
       return data;
     },
     initialData: post.post_likes,
+    staleTime: 60000,
   });
-
   const isLiked = Boolean(
     latestPostLikes?.find((liker) => liker.user === user?.id)
   );
 
+  const { data: latestPostComments, refetch: refetchLatestPostComments } =
+    useQuery({
+      queryKey: ["post_comments", post?.id],
+      queryFn: async () => {
+        const { data } = await getComments({ postId: post.id });
+        return data;
+      },
+      initialData: post.post_comments,
+      staleTime: 60000,
+      enabled: showComments,
+    });
+
   useEffect(() => {
-    const channels = supabase
+    const likes_channels = supabase
       .channel(`post_likes${post.id}`)
       .on(
         "postgres_changes",
@@ -66,8 +81,20 @@ export default function PostCard({
       )
       .subscribe();
 
+    const comments_channels = supabase
+      .channel(`post_comments${post.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "post_comments" },
+        () => {
+          refetchLatestPostComments();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channels);
+      supabase.removeChannel(likes_channels);
+      supabase.removeChannel(comments_channels);
     };
   }, [supabase]);
   return (
@@ -136,8 +163,37 @@ export default function PostCard({
               </ScrollArea>
             </DialogContent>
           </Dialog>
-          <button className="hover:underline">Comments</button>
+          <button
+            onClick={() => setShowComments((prev) => !prev)}
+            className="hover:underline"
+          >
+            Comments
+          </button>
         </div>
+        {showComments &&
+          latestPostComments?.map((comment: PostCommentTypes) => {
+            return (
+              <Card key={comment.id} className="w-full">
+                <CardHeader className="p-2">
+                  <div className="flex gap-1 items-start text-sm">
+                    <UserCircle className="size-10 shrink-0" />
+                    <div>
+                      <div className="flex items-center flex-wrap">
+                        <p className="font-bold line-clamp-1 min-w-fit pr-1">
+                          {comment.users?.fullname}
+                        </p>
+                        <p>@{comment.users?.username}</p>
+                      </div>
+                      <div className="flex items-center flex-wrap gap-x-1">
+                        <p className="whitespace-pre-line">{comment.content}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            );
+          })}
+
         {user && (
           <div className="flex flex-row gap-4 w-full">
             <Button
@@ -152,7 +208,7 @@ export default function PostCard({
                 <ThumbsUp className="size-4" />
               )}
             </Button>
-            <Input className="flex-1" placeholder="Comment" />
+            <CommentForm postId={post.id} />
           </div>
         )}
       </CardFooter>
