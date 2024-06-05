@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import CommentForm from "@/app/(user)/feed/comment-form";
 import getComments from "@/app/actions/get-comments";
+import CommentCard from "./comment-card";
 
 export default function PostCard({
   post,
@@ -98,7 +99,7 @@ export default function PostCard({
     };
   }, [supabase]);
   return (
-    <Card key={post.id}>
+    <Card>
       <CardHeader className="text-sm">
         <UserHoverCard user={post?.users} currentUser={user}>
           <div className="flex gap-1 items-start">
@@ -172,26 +173,7 @@ export default function PostCard({
         </div>
         {showComments &&
           latestPostComments?.map((comment: PostCommentTypes) => {
-            return (
-              <Card key={comment.id} className="w-full">
-                <CardHeader className="p-2">
-                  <div className="flex gap-1 items-start text-sm">
-                    <UserCircle className="size-10 shrink-0" />
-                    <div>
-                      <div className="flex items-center flex-wrap">
-                        <p className="font-bold line-clamp-1 min-w-fit pr-1">
-                          {comment.users?.fullname}
-                        </p>
-                        <p>@{comment.users?.username}</p>
-                      </div>
-                      <div className="flex items-center flex-wrap gap-x-1">
-                        <p className="whitespace-pre-line">{comment.content}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            );
+            return <CommentCard comment={comment} key={comment.id} />;
           })}
 
         {user && (
