@@ -24,7 +24,7 @@ export default function Feed() {
       </div>
     );
   return (
-    <main className="p-4 pb-0 h-full overflow-auto flex gap-4">
+    <main className="px-4 h-full overflow-auto flex gap-4">
       <FeedSection currentUser={currentUserData?.data} />
     </main>
   );

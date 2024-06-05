@@ -29,12 +29,18 @@ export default function UserHoverCard({
     enabled: Boolean(user),
     queryKey: ["friendship", user?.id],
     queryFn: async () => {
-      const { data } = await getFriendship(user?.id ?? "", false);
+      const { data } = await getFriendship(user?.id ?? "");
       return data;
     },
   });
 
-  const isAdded = Boolean(friendshipData?.id);
+  const isRequested = Boolean(friendshipData?.id);
+  const binds = friendshipData?.binds as {
+    receiver: string;
+    requester: string;
+  };
+
+  const iRequested = binds?.requester === currentUser?.id;
 
   const handleAddFriend = async (user?: string) => {
     if (!user) return;
@@ -43,7 +49,6 @@ export default function UserHoverCard({
     if (error) setError(error);
     setIsPending(false);
   };
-
   const handleUnfriend = async (user?: string) => {
     if (!user) return;
     setIsPending(true);
@@ -53,7 +58,7 @@ export default function UserHoverCard({
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !currentUser) return;
     const friendships_channel = supabase
       .channel(`friendships${user?.id}`)
       .on(
@@ -68,7 +73,7 @@ export default function UserHoverCard({
     return () => {
       supabase.removeChannel(friendships_channel);
     };
-  }, [supabase, user, friendshipData, refetchFriendship]);
+  }, [currentUser, refetchFriendship, supabase, user]);
 
   return (
     <HoverCard openDelay={250}>
@@ -85,26 +90,39 @@ export default function UserHoverCard({
         </div>
         {currentUser?.id !== user?.id && currentUser && (
           <div className="flex flex-row gap-4">
-            <Button
-              disabled={isPending || isAdded}
-              onClick={() => handleAddFriend(user?.id)}
-              className="flex-1"
-            >
-              {isAdded
-                ? "Requested"
-                : error
-                ? "Error"
-                : isPending
-                ? "Adding..."
-                : "Add Friend"}
-            </Button>
-            {isAdded && (
+            {isRequested ? (
+              iRequested ? (
+                <>
+                  <Button disabled className="flex-1">
+                    Requested
+                  </Button>
+                  <Button
+                    disabled={isPending}
+                    onClick={() => handleUnfriend(user?.id)}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className="flex-1">Accept</Button>
+                  <Button
+                    disabled={isPending}
+                    onClick={() => handleUnfriend(user?.id)}
+                    variant="outline"
+                  >
+                    Delete
+                  </Button>
+                </>
+              )
+            ) : (
               <Button
-                disabled={isPending}
-                onClick={() => handleUnfriend(user?.id)}
-                variant={"outline"}
+                disabled={isPending || isRequested}
+                onClick={() => handleAddFriend(user?.id)}
+                className="flex-1"
               >
-                Cancel
+                {error ? "Error" : isPending ? "Adding..." : "Add Friend"}
               </Button>
             )}
           </div>

@@ -69,6 +69,7 @@ export default function PostCard({
     });
 
   useEffect(() => {
+    if (!currentUser || !post) return;
     const likes_channels = supabase
       .channel(`post_likes${post.id}`)
       .on(
@@ -79,7 +80,6 @@ export default function PostCard({
         }
       )
       .subscribe();
-
     const comments_channels = supabase
       .channel(`post_comments${post.id}`)
       .on(
@@ -95,7 +95,13 @@ export default function PostCard({
       supabase.removeChannel(likes_channels);
       supabase.removeChannel(comments_channels);
     };
-  }, [supabase]);
+  }, [
+    currentUser,
+    post,
+    refetchLatestLikes,
+    refetchLatestPostComments,
+    supabase,
+  ]);
   return (
     <Card>
       <CardHeader className="text-sm">

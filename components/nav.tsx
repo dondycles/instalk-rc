@@ -21,7 +21,7 @@ import { useDebounce } from "@/lib/useDebounce";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FaMessage } from "react-icons/fa6";
 import { user } from "@/lib/global";
-export default function FeedNav({ user }: { user?: user }) {
+export default function FeedNav({ currentUser }: { currentUser?: user }) {
   const [focused, setFocused] = useState(false);
   const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
@@ -31,22 +31,21 @@ export default function FeedNav({ user }: { user?: user }) {
 
   const [showResults, setShowResults] = useState(false);
 
-  const handleSearch = async () => {
-    if (!user) return;
-    const { data } = await searchUser(debouncedQuery);
-    setResult(data);
-    setShowResults(true);
-  };
   const handleLogOut = async () => {
-    if (!user) return;
+    if (!currentUser) return;
     queryClient.clear();
     await logOut();
   };
   useEffect(() => {
-    if (!user) return;
+    if (!currentUser) return;
     if (query === "") return setShowResults(false);
+    const handleSearch = async () => {
+      const { data } = await searchUser(debouncedQuery);
+      setResult(data);
+      setShowResults(true);
+    };
     handleSearch();
-  }, [debouncedQuery]);
+  }, [debouncedQuery, query, currentUser]);
 
   return (
     <nav className="flex gap-4 items-center pt-4 px-4  h-14">
@@ -91,7 +90,9 @@ export default function FeedNav({ user }: { user?: user }) {
                         <Link
                           target="_parent"
                           href={
-                            res.id === user?.id ? "/profile" : "/u/" + res.id
+                            res.id === currentUser?.id
+                              ? "/profile"
+                              : "/u/" + res.id
                           }
                         >
                           <FaUserCircle className="text-2xl min-w-fit" />
@@ -110,7 +111,7 @@ export default function FeedNav({ user }: { user?: user }) {
           </div>
         )}
       </div>
-      {user ? (
+      {currentUser ? (
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -134,7 +135,7 @@ export default function FeedNav({ user }: { user?: user }) {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={"/u/" + user?.username}>Profile</Link>
+                <Link href={"/u/" + currentUser?.username}>Profile</Link>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogOut}>
                 Log Out
