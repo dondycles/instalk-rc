@@ -7,6 +7,11 @@ import { Loader2 } from "lucide-react";
 import FeedRightSection from "./right-section";
 import { useEffect, useState } from "react";
 import FeedLeftSection from "./left-section";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 export default function Feed() {
   const queryClient = useQueryClient();
@@ -45,23 +50,37 @@ export default function Feed() {
       </div>
     );
 
-  if (mounted && !currentUserData)
+  if (mounted && !currentUserData?.data)
     return (
       <main className="px-4 h-full overflow-auto flex gap-4 justify-center ">
         <FeedSection />
       </main>
     );
 
-  if (mounted && currentUserData)
+  if (mounted && currentUserData?.data)
     return (
       <main className="px-4 h-full overflow-auto flex gap-4 justify-center ">
         {isMobile ? (
           <FeedSection currentUser={currentUserData?.data} />
         ) : (
           <>
-            <FeedLeftSection currentUser={currentUserData?.data} />
-            <FeedSection currentUser={currentUserData?.data} />
-            <FeedRightSection currentUser={currentUserData?.data} />
+            <ResizablePanelGroup
+              direction="horizontal"
+              className="w-full h-full gap-4"
+            >
+              <ResizablePanel>
+                <FeedLeftSection currentUser={currentUserData?.data} />
+              </ResizablePanel>
+              <ResizableHandle />
+              <ResizablePanel>
+                <FeedSection currentUser={currentUserData?.data} />
+              </ResizablePanel>
+              <ResizableHandle />
+
+              <ResizablePanel>
+                <FeedRightSection currentUser={currentUserData?.data} />
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </>
         )}
       </main>

@@ -14,7 +14,7 @@ export default function FeedLeftSection({
     return (
       <ScrollArea className={`h-full flex-1 hidden lg:block`}>
         <div className="gap-2 flex flex-col overflow-auto pb-4">
-          <Button variant={"outline"} className="mt-4 gap-1 h-fit">
+          <Button variant={"ghost"} className="mt-4 gap-1 h-fit">
             <UserCircle className="size-10 shrink-0" />
             <p className="text-left w-full font-bold ">
               {currentUser?.fullname}

@@ -49,8 +49,9 @@ export default function FeedSection({ currentUser }: { currentUser?: user }) {
   const [expandCreatePost, setExpandCreatePost] = useState(false);
 
   useEffect(() => {
+    if (!currentUser) return;
     const channels = supabase
-      .channel("posts")
+      .channel(`posts${currentUser?.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "posts" },
@@ -63,24 +64,24 @@ export default function FeedSection({ currentUser }: { currentUser?: user }) {
     return () => {
       supabase.removeChannel(channels);
     };
-  }, [supabase]);
+  }, [currentUser, refetchPosts, supabase]);
 
   if (postsLoading)
     return (
-      <div className="text-center text-muted-foreground text-xs flex flex-row gap-2 items-center justify-center h-fit w-full">
+      <div className="mt-4 text-center text-muted-foreground text-xs flex flex-row gap-2 items-center justify-center h-fit w-full">
         <p>Getting posts... </p> <Loader2 className="animate-spin size-4" />
       </div>
     );
 
   if (posts?.error || postsError)
     return (
-      <div className="text-center text-destructive text-xs flex flex-row gap-2 items-center justify-center h-fit w-full">
+      <div className="mt-4 text-center text-destructive text-xs flex flex-row gap-2 items-center justify-center h-fit w-full">
         <p>Error getting posts</p>
       </div>
     );
 
   return (
-    <ScrollArea className="h-full flex-1 max-w-[600px]">
+    <ScrollArea className="h-full flex-1 max-w-[600px] mx-auto">
       <div className="gap-4 flex flex-col overflow-auto pb-4">
         {currentUser && (
           <PostForm

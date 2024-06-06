@@ -31,7 +31,7 @@ export default function UserHoverCard({
     error: friendshipError,
     refetch: refetchFriendship,
   } = useQuery({
-    enabled: Boolean(user),
+    enabled: Boolean(user && currentUser),
     queryKey: ["friendship", user?.id, currentUser?.id],
     queryFn: async () => {
       const { data } = await getFriendship(user?.id ?? "");
@@ -69,9 +69,9 @@ export default function UserHoverCard({
   };
 
   useEffect(() => {
-    if (!user || !currentUser) return;
+    if (!currentUser || !user) return;
     const friendships_channel = supabase
-      .channel(`friendship`)
+      .channel(`friendship${user?.id}${currentUser?.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },
@@ -92,7 +92,7 @@ export default function UserHoverCard({
       <HoverCardContent className="w-fit gap-2 flex flex-col" align="start">
         <div className="flex flex-row gap-1 items-start">
           <UserCircle className="size-10 shrink-0" />
-          <div className="flex flex-col ">
+          <div className="flex flex-col text-sm">
             <p className="font-bold line-clamp-1 min-w-fit pr-1">
               {user?.fullname}
             </p>

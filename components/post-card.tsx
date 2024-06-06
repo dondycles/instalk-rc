@@ -71,7 +71,7 @@ export default function PostCard({
   useEffect(() => {
     if (!currentUser || !post) return;
     const likes_channels = supabase
-      .channel(`post_likes`)
+      .channel(`post_likes${post.id}${currentUser.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "post_likes" },
@@ -81,7 +81,7 @@ export default function PostCard({
       )
       .subscribe();
     const comments_channels = supabase
-      .channel(`post_comments`)
+      .channel(`post_comments${post.id}${currentUser.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "post_comments" },
@@ -103,7 +103,7 @@ export default function PostCard({
     supabase,
   ]);
   return (
-    <Card>
+    <Card className={`${!currentUser && "first:mt-4"}`}>
       <CardHeader className="text-sm">
         <div className="flex gap-1 items-start">
           <UserCircle className="size-10 shrink-0" />

@@ -3,6 +3,7 @@ import { getFriends } from "@/app/actions/friendship";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import UserHoverCard from "@/components/user-hover-card";
 import { user } from "@/lib/global";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -48,8 +49,9 @@ export default function FeedRightSection({
   //   }, [currentUser?.id, supabase]);
 
   useEffect(() => {
+    if (!currentUser) return;
     const friendships = supabase
-      .channel(`friendships`)
+      .channel(`friendships${currentUser?.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },
@@ -62,7 +64,7 @@ export default function FeedRightSection({
     return () => {
       supabase.removeChannel(friendships);
     };
-  }, [currentUser?.id, refetch, supabase]);
+  }, [currentUser, refetch, supabase]);
 
   if (isLoading) return;
 
@@ -77,14 +79,20 @@ export default function FeedRightSection({
           <Separator />
           {data?.data?.map((friend) => {
             return (
-              <Button
-                variant={"ghost"}
+              <UserHoverCard
+                currentUser={currentUser}
+                user={friend}
                 key={friend.id}
-                className="gap-1 justify-start"
               >
-                <UserCircle />
-                <p className="font-bold text-sm">{friend.fullname}</p>
-              </Button>
+                <Button
+                  variant={"ghost"}
+                  key={friend.id}
+                  className="gap-1 justify-start w-full"
+                >
+                  <UserCircle />
+                  <p className="font-bold text-sm">{friend.fullname}</p>
+                </Button>
+              </UserHoverCard>
             );
           })}
         </div>
