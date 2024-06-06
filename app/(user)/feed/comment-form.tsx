@@ -23,12 +23,14 @@ const commentSchema = z.object({
 export default function CommentForm({
   postId,
   commentId,
+  showComments,
 }: {
   postId: string;
   commentId?: string;
+  showComments: () => void;
 }) {
   const [expandInput, setExpandInput] = useState(false);
-
+  const [isPending, setIsPending] = useState(false);
   const form = useForm<z.infer<typeof commentSchema>>({
     resolver: zodResolver(commentSchema),
     defaultValues: {
@@ -39,8 +41,11 @@ export default function CommentForm({
   });
 
   async function handleComment(values: z.infer<typeof commentSchema>) {
+    setIsPending(true);
     await comment(values);
     form.reset();
+    setIsPending(false);
+    showComments();
   }
 
   return (
@@ -74,6 +79,7 @@ export default function CommentForm({
         {expandInput && (
           <div className="flex gap-4 justify-end">
             <Button
+              disabled={isPending}
               onClick={() => {
                 setExpandInput(false);
                 form.reset();
@@ -83,7 +89,7 @@ export default function CommentForm({
             >
               Cancel
             </Button>
-            <Button disabled={form.formState.isSubmitting} type="submit">
+            <Button disabled={isPending} type="submit">
               Comment
             </Button>
           </div>

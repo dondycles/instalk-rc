@@ -1,20 +1,46 @@
-import { Globe2, Loader2, Lock, ThumbsUp, UserCircle } from "lucide-react";
+import {
+  DotSquare,
+  Ellipsis,
+  EyeOff,
+  Flag,
+  FlagOff,
+  Globe2,
+  Loader2,
+  Lock,
+  Menu,
+  Pencil,
+  ThumbsUp,
+  Trash,
+  UserCircle,
+} from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { user } from "@/lib/global";
-import likePost from "@/app/actions/like-post";
+import {
+  likePost,
+  getPostLikes,
+  unlikePost,
+  deletePost,
+} from "@/app/actions/post";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import getPostLikes from "@/app/actions/get-postlikes";
-import unlikePost from "@/app/actions/unlike-post";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import CommentForm from "@/app/(user)/feed/comment-form";
 import getComments from "@/app/actions/get-comments";
 import CommentCard from "./comment-card";
 import UserHoverCard from "./user-hover-card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { Textarea } from "./ui/textarea";
+import EditPostForm from "@/app/(user)/feed/edit-post-form";
 
 export default function PostCard({
   post,
@@ -24,8 +50,12 @@ export default function PostCard({
   currentUser?: user;
 }) {
   const supabase = createClient();
+  const [showEditForm, setShowEditForm] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [isLikingPost, setIsLikingPost] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const isMyPost = post.user === currentUser?.id;
+
   const handleLike = async () => {
     if (!post) return;
     if (!currentUser) return;
@@ -43,6 +73,14 @@ export default function PostCard({
     }, 1000);
   };
 
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!currentUser) return;
+    setIsDeleting(true);
+    const { error } = await deletePost(post.id);
+    if (error) setIsDeleting(false);
+  };
+
   const { data: latestPostLikes, refetch: refetchLatestLikes } = useQuery({
     queryKey: ["post_likes", post?.id],
     queryFn: async () => {
@@ -52,6 +90,7 @@ export default function PostCard({
     initialData: post.post_likes,
     staleTime: 60000,
   });
+
   const isLiked = Boolean(
     latestPostLikes?.find((liker) => liker.user === currentUser?.id)
   );
@@ -102,12 +141,17 @@ export default function PostCard({
     refetchLatestPostComments,
     supabase,
   ]);
+
   return (
-    <Card className={`${!currentUser && "first:mt-4"}`}>
+    <Card
+      className={`${!currentUser && "first:mt-4"} ${
+        isDeleting && "opacity-50"
+      }`}
+    >
       <CardHeader className="text-sm">
         <div className="flex gap-1 items-start">
           <UserCircle className="size-10 shrink-0" />
-          <div>
+          <div className="flex-1">
             <div className="flex items-center flex-wrap">
               <UserHoverCard user={post?.users} currentUser={currentUser}>
                 <p className="font-bold line-clamp-1 min-w-fit pr-1">
@@ -128,11 +172,60 @@ export default function PostCard({
               </p>
             </div>
           </div>
+          {isMyPost ? (
+            <Dialog onOpenChange={setShowEditForm} open={showEditForm}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="aspect-square p-0 size-6"
+                    variant={"ghost"}
+                  >
+                    <Ellipsis className="size-4 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={handleDelete}>
+                    <Trash className="size-4 mr-1" /> Delete
+                  </DropdownMenuItem>
+                  <DialogTrigger asChild>
+                    <DropdownMenuItem>
+                      <Pencil className="size-4 mr-1" />
+                      Edit
+                    </DropdownMenuItem>
+                  </DialogTrigger>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DialogContent>
+                <EditPostForm
+                  close={() => setShowEditForm(false)}
+                  postData={post}
+                  currentUser={currentUser}
+                />
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="aspect-square p-0 size-6" variant={"ghost"}>
+                  <Ellipsis className="size-4 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem>
+                  <EyeOff className="size-4 mr-1" /> Hide
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Flag className="size-4 mr-1" /> Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-line">{post.content}</p>
       </CardContent>
+
       <CardFooter className="flex flex-col gap-4">
         <Separator />
         <div className="text-xs text-muted-foreground flex gap-4 justify-start w-full">
@@ -176,17 +269,6 @@ export default function PostCard({
             Comments
           </button>
         </div>
-        {showComments &&
-          latestPostComments?.map((comment: PostCommentTypes) => {
-            return (
-              <CommentCard
-                comment={comment}
-                key={comment.id}
-                currentUser={currentUser}
-              />
-            );
-          })}
-
         {currentUser && (
           <div className="flex flex-row gap-4 w-full">
             <Button
@@ -201,7 +283,23 @@ export default function PostCard({
                 <ThumbsUp className="size-4" />
               )}
             </Button>
-            <CommentForm postId={post.id} />
+            <CommentForm
+              showComments={() => setShowComments(true)}
+              postId={post.id}
+            />
+          </div>
+        )}
+        {showComments && latestPostComments?.length !== 0 && (
+          <div className="w-full flex flex-col gap-2">
+            {latestPostComments?.map((comment: PostCommentTypes) => {
+              return (
+                <CommentCard
+                  comment={comment}
+                  key={comment.id}
+                  currentUser={currentUser}
+                />
+              );
+            })}
           </div>
         )}
       </CardFooter>

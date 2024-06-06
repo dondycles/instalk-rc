@@ -12,9 +12,12 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLeftFeedSectionState } from "@/store";
 
 export default function Feed() {
   const queryClient = useQueryClient();
+  const leftFeedSectionState = useLeftFeedSectionState();
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const { data: currentUserData, isLoading: currentUserDataLoading } = useQuery(
@@ -68,16 +71,23 @@ export default function Feed() {
               direction="horizontal"
               className="w-full h-full gap-4"
             >
-              <ResizablePanel className="hidden lg:block">
-                <FeedLeftSection currentUser={currentUserData?.data} />
+              <ResizablePanel defaultSize={24} className="hidden lg:block">
+                <FeedLeftSection
+                  key={"not-collapsed"}
+                  currentUser={currentUserData?.data}
+                />
               </ResizablePanel>
-              <ResizableHandle className="hidden lg:block" />
+              <ResizableHandle
+                className={`hidden lg:block ${
+                  leftFeedSectionState.collapse && "invisible "
+                }`}
+              />
               <ResizablePanel>
                 <FeedSection currentUser={currentUserData?.data} />
               </ResizablePanel>
               <ResizableHandle className="hidden lg:block" />
 
-              <ResizablePanel className="hidden lg:block">
+              <ResizablePanel defaultSize={24} className="hidden lg:block">
                 <FeedRightSection currentUser={currentUserData?.data} />
               </ResizablePanel>
             </ResizablePanelGroup>

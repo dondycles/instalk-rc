@@ -1,4 +1,4 @@
-import post from "@/app/actions/post";
+import { post } from "@/app/actions/post";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -19,11 +19,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { user } from "@/lib/global";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const postSchema = z.object({
-  content: z.string().min(1).max(144),
+  content: z.string().min(1).max(1440),
   privacy: z.enum(["public", "private"]),
 });
 
@@ -36,6 +37,7 @@ export default function PostForm({
   setExpandCreatePost: (value: boolean) => void;
   currentUser?: user;
 }) {
+  const [isPending, setIsPending] = useState(false);
   const form = useForm<z.infer<typeof postSchema>>({
     resolver: zodResolver(postSchema),
     defaultValues: {
@@ -46,6 +48,7 @@ export default function PostForm({
 
   async function handlePost(values: z.infer<typeof postSchema>) {
     if (!currentUser) return;
+    setIsPending(true);
     const { error } = await post(values);
     if (error)
       return form.setError("content", {
@@ -54,6 +57,7 @@ export default function PostForm({
 
     form.reset();
     setExpandCreatePost(false);
+    setIsPending(false);
   }
 
   return (
@@ -120,17 +124,14 @@ export default function PostForm({
                   )}
                 />
                 <Button
+                  disabled={isPending}
                   variant={"outline"}
                   onClick={() => setExpandCreatePost(false)}
                   type="button"
                 >
                   Cancel
                 </Button>
-                <Button
-                  disabled={form.formState.isSubmitting}
-                  type="submit"
-                  className=""
-                >
+                <Button disabled={isPending} type="submit" className="">
                   Post
                 </Button>
               </div>

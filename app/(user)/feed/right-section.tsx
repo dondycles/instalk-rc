@@ -7,7 +7,7 @@ import UserHoverCard from "@/components/user-hover-card";
 import { user } from "@/lib/global";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Circle, Dot, UserCircle } from "lucide-react";
+import { UserCircle } from "lucide-react";
 import { useEffect } from "react";
 
 export default function FeedRightSection({
@@ -73,7 +73,7 @@ export default function FeedRightSection({
       <ScrollArea className={`h-full flex-1 hidden lg:block`}>
         <div className="gap-2 flex flex-col overflow-auto pb-4">
           <div className="mt-4 text-sm font-bold flex gap-1 items-center">
-            <p className="pl-4">Friends</p>
+            <p className="pl-4 w-full truncate">Friends</p>
             {/* <Circle className="fill-green-500 text-green-500 size-3" /> */}
           </div>
           <Separator />
@@ -89,8 +89,10 @@ export default function FeedRightSection({
                   key={friend.id}
                   className="gap-1 justify-start w-full"
                 >
-                  <UserCircle />
-                  <p className="font-bold text-sm">{friend.fullname}</p>
+                  <UserCircle className="shrink-0" />
+                  <p className="font-bold text-sm truncate">
+                    {friend.fullname}
+                  </p>
                 </Button>
               </UserHoverCard>
             );

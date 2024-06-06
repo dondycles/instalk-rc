@@ -1,6 +1,6 @@
 "use client";
 
-import getPosts from "@/app/actions/get-posts";
+import { getPosts } from "@/app/actions/post";
 import PostCard from "@/components/post-card";
 import { user } from "@/lib/global";
 import { useQuery } from "@tanstack/react-query";

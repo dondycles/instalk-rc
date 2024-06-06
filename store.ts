@@ -16,3 +16,18 @@ export const useCurrentUserData = create<CurrentUser>()(
     { name: "current-user" }
   )
 );
+
+type LeftFeedSection = {
+  collapse: boolean;
+  toggleCollapse: () => void;
+};
+
+export const useLeftFeedSectionState = create<LeftFeedSection>()(
+  persist(
+    (set) => ({
+      collapse: false,
+      toggleCollapse: () => set((current) => ({ collapse: !current.collapse })),
+    }),
+    { name: "left-feef-section-state" }
+  )
+);

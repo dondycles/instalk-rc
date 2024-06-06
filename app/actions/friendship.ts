@@ -72,6 +72,18 @@ export async function getFriend(friendId: z.infer<typeof UUID>) {
   return { data: data };
 }
 
+export async function getReceivedRequests() {
+  const { data, error } = await supabase
+    .from("friendships")
+    .select("*")
+    .or(
+      `and(binds->>receiver.eq.${currentUser.user?.id},is_accepted.eq.false)`
+    );
+
+  if (error) return { error: error };
+  return { data: data };
+}
+
 export async function requestFriendship(user: z.infer<typeof UUID>) {
   //   check first if already requested
   const { data } = await getFriendship(user);
