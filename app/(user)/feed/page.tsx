@@ -68,16 +68,16 @@ export default function Feed() {
               direction="horizontal"
               className="w-full h-full gap-4"
             >
-              <ResizablePanel>
+              <ResizablePanel className="hidden lg:block">
                 <FeedLeftSection currentUser={currentUserData?.data} />
               </ResizablePanel>
-              <ResizableHandle />
+              <ResizableHandle className="hidden lg:block" />
               <ResizablePanel>
                 <FeedSection currentUser={currentUserData?.data} />
               </ResizablePanel>
-              <ResizableHandle />
+              <ResizableHandle className="hidden lg:block" />
 
-              <ResizablePanel>
+              <ResizablePanel className="hidden lg:block">
                 <FeedRightSection currentUser={currentUserData?.data} />
               </ResizablePanel>
             </ResizablePanelGroup>
