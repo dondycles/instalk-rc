@@ -71,7 +71,7 @@ export default function PostCard({
   useEffect(() => {
     if (!currentUser || !post) return;
     const likes_channels = supabase
-      .channel(`post_likes${post.id}`)
+      .channel(`post_likes`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "post_likes" },
@@ -81,7 +81,7 @@ export default function PostCard({
       )
       .subscribe();
     const comments_channels = supabase
-      .channel(`post_comments${post.id}`)
+      .channel(`post_comments`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "post_comments" },
@@ -137,7 +137,7 @@ export default function PostCard({
         <Separator />
         <div className="text-xs text-muted-foreground flex gap-4 justify-start w-full">
           <Dialog>
-            <DialogTrigger>
+            <DialogTrigger asChild>
               <button
                 disabled={!latestPostLikes?.length}
                 className="hover:underline"

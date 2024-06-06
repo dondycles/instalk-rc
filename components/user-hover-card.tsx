@@ -2,12 +2,16 @@ import { user } from "@/lib/global";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { UserCircle } from "lucide-react";
 import { Button } from "./ui/button";
-import addFriend from "@/app/actions/add-friend";
+import {
+  requestFriendship,
+  getFriendship,
+  deleteFriendship,
+  acceptFriendship,
+} from "@/app/actions/friendship";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import getFriendship from "@/app/actions/get-friendship";
-import unFriend from "@/app/actions/un-friend";
+import { useQuery } from "@tanstack/react-query";
+import { z } from "zod";
 
 export default function UserHoverCard({
   children,
@@ -18,6 +22,7 @@ export default function UserHoverCard({
   user?: user | null;
   currentUser?: user | null;
 }) {
+  const UUID = z.string().uuid({ message: "Not a valid UUID." });
   const supabase = createClient();
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,32 +32,38 @@ export default function UserHoverCard({
     refetch: refetchFriendship,
   } = useQuery({
     enabled: Boolean(user),
-    queryKey: ["friendship", user?.id],
+    queryKey: ["friendship", user?.id, currentUser?.id],
     queryFn: async () => {
       const { data } = await getFriendship(user?.id ?? "");
       return data;
     },
   });
-
-  const isRequested = Boolean(friendshipData?.id);
   const binds = friendshipData?.binds as {
-    receiver: string;
-    requester: string;
+    receiver: z.infer<typeof UUID>;
+    requester: z.infer<typeof UUID>;
   };
-
+  const isRequested = Boolean(friendshipData?.id);
   const iRequested = binds?.requester === currentUser?.id;
+  const isAccepted = friendshipData?.is_accepted;
 
-  const handleAddFriend = async (user?: string) => {
-    if (!user) return;
+  const handleAcceptFriendship = async (user?: z.infer<typeof UUID>) => {
+    if (!user || !currentUser) return;
     setIsPending(true);
-    const { error } = await addFriend(user);
+    const { error } = await acceptFriendship(user);
     if (error) setError(error);
     setIsPending(false);
   };
-  const handleUnfriend = async (user?: string) => {
-    if (!user) return;
+  const handleRequestFriendship = async (user?: z.infer<typeof UUID>) => {
+    if (!user || !currentUser) return;
     setIsPending(true);
-    const { error } = await unFriend(user);
+    const { error } = await requestFriendship(user);
+    if (error) setError(error);
+    setIsPending(false);
+  };
+  const handleDeleteFriendship = async (user?: z.infer<typeof UUID>) => {
+    if (!user || !currentUser) return;
+    setIsPending(true);
+    const { error } = await deleteFriendship(user);
     if (error) setError(error);
     setIsPending(false);
   };
@@ -60,7 +71,7 @@ export default function UserHoverCard({
   useEffect(() => {
     if (!user || !currentUser) return;
     const friendships_channel = supabase
-      .channel(`friendships${user?.id}`)
+      .channel(`friendship`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },
@@ -90,7 +101,20 @@ export default function UserHoverCard({
         </div>
         {currentUser?.id !== user?.id && currentUser && (
           <div className="flex flex-row gap-4">
-            {isRequested ? (
+            {isAccepted ? (
+              <>
+                <Button disabled className="flex-1">
+                  Friend
+                </Button>
+                <Button
+                  disabled={isPending}
+                  onClick={() => handleDeleteFriendship(user?.id)}
+                  variant="outline"
+                >
+                  Unfriend
+                </Button>
+              </>
+            ) : isRequested ? (
               iRequested ? (
                 <>
                   <Button disabled className="flex-1">
@@ -98,7 +122,7 @@ export default function UserHoverCard({
                   </Button>
                   <Button
                     disabled={isPending}
-                    onClick={() => handleUnfriend(user?.id)}
+                    onClick={() => handleDeleteFriendship(user?.id)}
                     variant="outline"
                   >
                     Cancel
@@ -106,10 +130,16 @@ export default function UserHoverCard({
                 </>
               ) : (
                 <>
-                  <Button className="flex-1">Accept</Button>
                   <Button
                     disabled={isPending}
-                    onClick={() => handleUnfriend(user?.id)}
+                    onClick={() => handleAcceptFriendship(user?.id)}
+                    className="flex-1"
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    disabled={isPending}
+                    onClick={() => handleDeleteFriendship(user?.id)}
                     variant="outline"
                   >
                     Delete
@@ -119,7 +149,7 @@ export default function UserHoverCard({
             ) : (
               <Button
                 disabled={isPending || isRequested}
-                onClick={() => handleAddFriend(user?.id)}
+                onClick={() => handleRequestFriendship(user?.id)}
                 className="flex-1"
               >
                 {error ? "Error" : isPending ? "Adding..." : "Add Friend"}

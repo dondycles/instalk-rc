@@ -42,7 +42,7 @@ export default function FeedSection({ currentUser }: { currentUser?: user }) {
     isLoading: postsLoading,
     refetch: refetchPosts,
   } = useQuery({
-    queryKey: ["feed"],
+    queryKey: ["feed", currentUser?.id],
     queryFn: async () => await getPosts(),
   });
 
@@ -80,7 +80,7 @@ export default function FeedSection({ currentUser }: { currentUser?: user }) {
     );
 
   return (
-    <ScrollArea className="h-full w-full">
+    <ScrollArea className="h-full flex-1 max-w-[600px]">
       <div className="gap-4 flex flex-col overflow-auto pb-4">
         {currentUser && (
           <PostForm

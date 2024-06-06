@@ -59,7 +59,7 @@ export default function PostForm({
   return (
     <Card className="mt-4">
       <CardHeader className="flex flex-row items-center gap-4">
-        <CardTitle className={`text-base sm:block hidden`}>
+        <CardTitle className={`sm:block hidden font-bold text-sm`}>
           Create post
         </CardTitle>
         {!expandCreatePost && (

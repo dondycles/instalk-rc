@@ -7,7 +7,6 @@ export default async function searchUser(search: string) {
     .from("users")
     .select("*")
     .ilike("fullname", "%" + search + "%");
-  console.log(error);
   if (error) return { error };
   return { data };
 }

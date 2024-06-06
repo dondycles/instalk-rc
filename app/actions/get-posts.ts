@@ -14,7 +14,6 @@ export default async function getPosts() {
     })
     .order("created_at", { referencedTable: "post_comments", ascending: false })
     .limit(4, { referencedTable: "post_comments" });
-  console.log(error);
   if (error) return { error: error };
   return { data: data };
 }
