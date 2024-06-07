@@ -1,19 +1,23 @@
 "use client";
 
 import { getUserLatestPosts, getUserProfile } from "@/app/actions/user";
+import FriendshipButtons from "@/components/friendship-btns";
 import PostCard from "@/components/post-card";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { user } from "@/lib/global";
 import { useQuery } from "@tanstack/react-query";
-import { Image, Loader2, UserCircle } from "lucide-react";
+import { Loader2, UserCircle } from "lucide-react";
 
 export default function ProfileSection({
   username,
   currentUser,
+  isCurrentUserProfile,
 }: {
   username: string;
   currentUser?: user;
+  isCurrentUserProfile?: boolean;
 }) {
   const {
     data: userProfileData,
@@ -59,8 +63,15 @@ export default function ProfileSection({
           <p className="text-muted-foreground text-sm">
             @{userProfileData?.data?.username}
           </p>
+          {!isCurrentUserProfile && (
+            <div className="mt-4">
+              <FriendshipButtons
+                currentUser={currentUser}
+                user={userProfileData?.data}
+              />
+            </div>
+          )}
         </div>
-
         <div className="gap-4 flex flex-col overflow-auto pb-4 max-w-[600px] mx-auto">
           {userLatestPosts?.map((post) => {
             return (

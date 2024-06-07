@@ -16,5 +16,7 @@ declare global {
   interface PostCommentTypes extends post_comments {
     users?: user | nullifiend;
   }
-  interface UserTypes extends user {}
+  interface UserTypes extends user {
+    posts?: PostTypes;
+  }
 }
