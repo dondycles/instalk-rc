@@ -2,11 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-const supabase = createClient();
-const currentUser = (await supabase.auth.getUser()).data;
+
 const UUID = z.string().uuid({ message: "Not a valid UUID." });
 
 export async function getFriendship(user: z.infer<typeof UUID>) {
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
   const { data, error } = await supabase
     .from("friendships")
     .select("*")
@@ -20,6 +21,8 @@ export async function getFriendship(user: z.infer<typeof UUID>) {
 }
 
 export async function getFriends() {
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
   const newFriendshipList: {
     username: string;
     fullname: string;
@@ -62,6 +65,7 @@ export async function getFriends() {
 }
 
 export async function getFriend(friendId: z.infer<typeof UUID>) {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from("users")
     .select("id,fullname,username")
@@ -73,6 +77,8 @@ export async function getFriend(friendId: z.infer<typeof UUID>) {
 }
 
 export async function getReceivedRequests() {
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
   const { data, error } = await supabase
     .from("friendships")
     .select("*")
@@ -85,6 +91,8 @@ export async function getReceivedRequests() {
 }
 
 export async function requestFriendship(user: z.infer<typeof UUID>) {
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
   //   check first if already requested
   const { data } = await getFriendship(user);
   if (data?.id) return { sucess: "Added!" };
@@ -100,6 +108,8 @@ export async function requestFriendship(user: z.infer<typeof UUID>) {
 }
 
 export async function acceptFriendship(user: z.infer<typeof UUID>) {
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
   const { error } = await supabase
     .from("friendships")
     .update({
@@ -114,6 +124,8 @@ export async function acceptFriendship(user: z.infer<typeof UUID>) {
 }
 
 export async function deleteFriendship(user: z.infer<typeof UUID>) {
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
   const { error } = await supabase
     .from("friendships")
     .delete()

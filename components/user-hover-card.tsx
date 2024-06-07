@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
+import Link from "next/link";
 
 export default function UserHoverCard({
   children,
@@ -88,7 +89,11 @@ export default function UserHoverCard({
 
   return (
     <HoverCard openDelay={250}>
-      <HoverCardTrigger>{children}</HoverCardTrigger>
+      <HoverCardTrigger asChild>
+        <Link href={`/u/${user?.username}`} className="hover:underline">
+          {children}
+        </Link>
+      </HoverCardTrigger>
       <HoverCardContent className="w-fit gap-2 flex flex-col" align="start">
         <div className="flex flex-row gap-1 items-start">
           <UserCircle className="size-10 shrink-0" />

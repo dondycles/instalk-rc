@@ -28,7 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
-import CommentForm from "@/app/(user)/feed/comment-form";
+import CommentForm from "./comment-form";
 import getComments from "@/app/actions/get-comments";
 import CommentCard from "./comment-card";
 import UserHoverCard from "./user-hover-card";
@@ -40,14 +40,16 @@ import {
 } from "./ui/dropdown-menu";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Textarea } from "./ui/textarea";
-import EditPostForm from "@/app/(user)/feed/edit-post-form";
+import EditPostForm from "@/components/edit-post-form";
 
 export default function PostCard({
   post,
   currentUser,
+  addMarginToFirstCard,
 }: {
   post: PostTypes;
   currentUser?: user;
+  addMarginToFirstCard?: boolean;
 }) {
   const supabase = createClient();
   const [showEditForm, setShowEditForm] = useState(false);
@@ -144,7 +146,7 @@ export default function PostCard({
 
   return (
     <Card
-      className={`${!currentUser && "first:mt-4"} ${
+      className={`${addMarginToFirstCard === true && "first:mt-4"} ${
         isDeleting && "opacity-50"
       }`}
     >

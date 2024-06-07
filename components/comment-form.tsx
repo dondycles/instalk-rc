@@ -46,6 +46,7 @@ export default function CommentForm({
     form.reset();
     setIsPending(false);
     showComments();
+    setExpandInput(false);
   }
 
   return (

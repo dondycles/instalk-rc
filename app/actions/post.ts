@@ -3,11 +3,11 @@
 import { post as posttype, user } from "@/lib/global";
 import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
-const supabase = createClient();
-const currentUser = (await supabase.auth.getUser()).data;
 const UUID = z.string().uuid({ message: "Not a valid UUID." });
 
 export async function post(post: Pick<posttype, "content" | "privacy">) {
+  const supabase = createClient();
+
   const { error } = await supabase.from("posts").insert({
     content: post.content,
     privacy: post.privacy,
@@ -17,6 +17,8 @@ export async function post(post: Pick<posttype, "content" | "privacy">) {
 }
 
 export async function getPosts() {
+  const supabase = createClient();
+
   const { data, error } = await supabase
     .from("posts")
     .select(
@@ -33,6 +35,8 @@ export async function getPosts() {
 }
 
 export async function getPostLikes(post: Pick<PostTypes, "id">) {
+  const supabase = createClient();
+
   const { data, error } = await supabase
     .from("post_likes")
     .select("*, users(id,username,fullname)")
@@ -46,6 +50,8 @@ export async function getPostComments(data: {
   postId: string;
   commentId?: string;
 }) {
+  const supabase = createClient();
+
   const { error, data: comments } = await supabase
     .from("post_comments")
     .select("*, users(id,fullname,username)")
@@ -57,6 +63,8 @@ export async function getPostComments(data: {
 }
 
 export async function likePost(post: Pick<PostTypes, "id">) {
+  const supabase = createClient();
+
   const { error } = await supabase.from("post_likes").insert({
     post: post.id,
   });
@@ -80,6 +88,8 @@ export async function unlikePost(
 export async function editPost(
   post: Pick<PostTypes, "id" | "content" | "privacy">
 ) {
+  const supabase = createClient();
+
   const { error } = await supabase.from("posts").update(post).eq("id", post.id);
 
   if (error) return { error: error };
@@ -87,6 +97,8 @@ export async function editPost(
 }
 
 export async function deletePost(postId: z.infer<typeof UUID>) {
+  const supabase = createClient();
+
   const { error } = await supabase.from("posts").delete().eq("id", postId);
 
   if (error) return { error: error };
