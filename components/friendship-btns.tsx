@@ -10,13 +10,18 @@ import {
   getFriendship,
   requestFriendship,
 } from "@/app/actions/friendship";
+import { Check, Trash } from "lucide-react";
 
 export default function FriendshipButtons({
   currentUser,
   user,
+  friendsTabView,
+  searchView,
 }: {
   user?: user | null;
   currentUser?: user | null;
+  friendsTabView?: boolean;
+  searchView?: boolean;
 }) {
   const UUID = z.string().uuid({ message: "Not a valid UUID." });
   const supabase = createClient();
@@ -28,7 +33,7 @@ export default function FriendshipButtons({
     refetch: refetchFriendship,
   } = useQuery({
     enabled: Boolean(user && currentUser),
-    queryKey: ["friendship", user?.id, currentUser?.id],
+    queryKey: ["friendship", user?.username, currentUser?.username],
     queryFn: async () => {
       const { data } = await getFriendship(user?.id ?? "");
       return data;
@@ -38,7 +43,7 @@ export default function FriendshipButtons({
     receiver: z.infer<typeof UUID>;
     requester: z.infer<typeof UUID>;
   };
-  const isRequested = Boolean(friendshipData?.id);
+  const hasRequest = Boolean(friendshipData?.id);
   const iRequested = binds?.requester === currentUser?.id;
   const isAccepted = friendshipData?.is_accepted;
 
@@ -67,10 +72,12 @@ export default function FriendshipButtons({
   useEffect(() => {
     if (!currentUser || !user) return;
     const friendships_channel = supabase
-      .channel(`friendship${user?.id}${currentUser?.id}`)
+      .channel(
+        `friendship${user?.username}${currentUser?.username}${friendsTabView}`
+      )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "friendships" },
+        { event: "*", schema: "public", table: "friendships", filter: `` },
         () => {
           refetchFriendship();
         }
@@ -80,7 +87,54 @@ export default function FriendshipButtons({
     return () => {
       supabase.removeChannel(friendships_channel);
     };
-  }, [currentUser, refetchFriendship, supabase, user]);
+  }, [currentUser, refetchFriendship, supabase, user, friendsTabView]);
+
+  if (friendsTabView === true)
+    return (
+      <div className="flex flex-row gap-2">
+        {isAccepted ? (
+          <Button
+            size={"icon"}
+            disabled={isPending}
+            onClick={() => handleDeleteFriendship(user?.id)}
+            variant="outline"
+            className="rounded-full p-0 size-6"
+          >
+            <Trash className="size-4" />
+          </Button>
+        ) : iRequested ? (
+          <Button
+            size={"icon"}
+            disabled={isPending}
+            onClick={() => handleDeleteFriendship(user?.id)}
+            variant="outline"
+            className="rounded-full p-0 size-6"
+          >
+            <Trash className="size-4" />
+          </Button>
+        ) : (
+          <>
+            <Button
+              size={"icon"}
+              disabled={isPending}
+              onClick={() => handleAcceptFriendship(user?.id)}
+              className="rounded-full p-0 size-6"
+            >
+              <Check className="size-4" />
+            </Button>
+            <Button
+              size={"icon"}
+              disabled={isPending}
+              onClick={() => handleDeleteFriendship(user?.id)}
+              variant="outline"
+              className="rounded-full p-0 size-6"
+            >
+              <Trash className="size-4" />
+            </Button>
+          </>
+        )}
+      </div>
+    );
 
   return (
     <div className="flex flex-row gap-4">
@@ -97,7 +151,7 @@ export default function FriendshipButtons({
             Unfriend
           </Button>
         </>
-      ) : isRequested ? (
+      ) : hasRequest ? (
         iRequested ? (
           <>
             <Button disabled className="flex-1">
@@ -131,7 +185,7 @@ export default function FriendshipButtons({
         )
       ) : (
         <Button
-          disabled={isPending || isRequested}
+          disabled={isPending || hasRequest}
           onClick={() => handleRequestFriendship(user?.id)}
           className="flex-1"
         >

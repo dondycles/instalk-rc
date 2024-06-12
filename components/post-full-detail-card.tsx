@@ -1,5 +1,4 @@
 import {
-  DotSquare,
   Ellipsis,
   EyeOff,
   Flag,
@@ -29,7 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { ScrollArea } from "./ui/scroll-area";
 import CommentForm from "./comment-form";
-import { getCommentCounts, getLimitedComments } from "@/app/actions/comment";
+import { getALlComments } from "@/app/actions/comment";
 import CommentCard from "./comment-card";
 import UserHoverCard from "./user-hover-card";
 import {
@@ -39,10 +38,8 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import EditPostForm from "@/components/edit-post-form";
-import { Input } from "./ui/input";
-import PostFullDetailCard from "./post-full-detail-card";
 
-export default function PostCard({
+export default function PostFullDetailCard({
   post,
   currentUser,
   addMarginToFirstCard,
@@ -82,7 +79,11 @@ export default function PostCard({
     if (error) setIsDeleting(false);
   };
 
-  const { data: latestPostLikes, refetch: refetchLatestLikes } = useQuery({
+  const {
+    data: latestPostLikes,
+    refetch: refetchLatestLikes,
+    isLoading: latestPostLikesLoading,
+  } = useQuery({
     queryKey: ["post_likes", post?.id],
     queryFn: async () => {
       const { data } = await getPostLikes(post);
@@ -96,29 +97,24 @@ export default function PostCard({
     latestPostLikes?.find((liker) => liker.user === currentUser?.id)
   );
 
-  const { data: latestPostComments, refetch: refetchLatestPostComments } =
-    useQuery({
-      queryKey: ["post_comments", post?.id],
-      queryFn: async () => {
-        const { data } = await getLimitedComments({ postId: post.id });
-        return data;
-      },
-      initialData: post.post_comments,
-      staleTime: 60000,
-    });
-
-  const { data: commentCounts, refetch: refetchCommentCounts } = useQuery({
-    queryKey: ["comment-counts", post?.id],
+  const {
+    data: allPostComments,
+    refetch: refetchallPostComments,
+    isLoading: allPostCommentsLoading,
+  } = useQuery({
+    queryKey: ["post_all_comments", post?.id],
     queryFn: async () => {
-      const { data } = await getCommentCounts({ postId: post.id });
+      const { data } = await getALlComments({ postId: post.id });
       return data;
     },
   });
 
+  const isLoading = allPostCommentsLoading || latestPostLikesLoading;
+
   useEffect(() => {
     if (!currentUser || !post) return;
     const likes_channels = supabase
-      .channel(`post_likes${post.id}${currentUser.id}`)
+      .channel(`post_likes${post.id}${currentUser.id}full`)
       .on(
         "postgres_changes",
         {
@@ -133,7 +129,7 @@ export default function PostCard({
       )
       .subscribe();
     const comments_channels = supabase
-      .channel(`post_comments${post.id}${currentUser.id}`)
+      .channel(`post_comments${post.id}${currentUser.id}full`)
       .on(
         "postgres_changes",
         {
@@ -143,8 +139,7 @@ export default function PostCard({
           filter: `post=eq.${post.id}`,
         },
         () => {
-          refetchLatestPostComments();
-          refetchCommentCounts();
+          refetchallPostComments();
         }
       )
       .subscribe();
@@ -153,20 +148,15 @@ export default function PostCard({
       supabase.removeChannel(likes_channels);
       supabase.removeChannel(comments_channels);
     };
-  }, [
-    currentUser,
-    post,
-    refetchCommentCounts,
-    refetchLatestLikes,
-    refetchLatestPostComments,
-    supabase,
-  ]);
+  }, [currentUser, post, refetchLatestLikes, refetchallPostComments, supabase]);
+
+  if (isLoading) return;
 
   return (
     <Card
       className={`${addMarginToFirstCard === true && "first:mt-4"} ${
         isDeleting && "opacity-50"
-      }`}
+      } h-full w-full flex flex-col overflow-auto`}
     >
       <CardHeader className="text-sm">
         <div className="flex gap-1 items-start">
@@ -246,7 +236,7 @@ export default function PostCard({
         <p className="whitespace-pre-line">{post.content}</p>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-4">
+      <CardFooter className="flex flex-col gap-4 flex-1 h-full">
         <Separator />
         <div className="text-xs text-muted-foreground flex gap-4 justify-start w-full">
           <Dialog>
@@ -282,7 +272,7 @@ export default function PostCard({
               </ScrollArea>
             </DialogContent>
           </Dialog>
-          <p>{commentCounts} Comments</p>
+          <p>{allPostComments?.length} Comments</p>
         </div>
         {currentUser && (
           <div className="flex flex-row gap-4 w-full">
@@ -298,20 +288,12 @@ export default function PostCard({
                 <ThumbsUp className="size-4" />
               )}
             </Button>
-            {/* <CommentForm postId={post.id} /> */}
-            <Dialog>
-              <DialogTrigger className="flex-1">
-                <Input placeholder="Comment" />
-              </DialogTrigger>
-              <DialogContent className="h-[80vh] p-0 flex">
-                <PostFullDetailCard post={post} currentUser={currentUser} />
-              </DialogContent>
-            </Dialog>
+            <CommentForm postId={post.id} />
           </div>
         )}
-        {latestPostComments?.length !== 0 && (
-          <div className="w-full flex flex-col gap-2">
-            {latestPostComments?.map((comment: PostCommentTypes) => {
+        {allPostComments?.length !== 0 && (
+          <div className="w-full flex flex-col gap-2 pb-4">
+            {allPostComments?.map((comment: PostCommentTypes) => {
               return (
                 <CommentCard
                   comment={comment}

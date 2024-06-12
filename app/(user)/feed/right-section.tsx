@@ -19,7 +19,7 @@ export default function FeedRightSection({
 
   const { data, error, isLoading, refetch } = useQuery({
     enabled: Boolean(currentUser),
-    queryKey: ["friends", currentUser?.id],
+    queryKey: ["friends", currentUser?.username],
     queryFn: async () => await getFriends(),
   });
 
@@ -51,7 +51,7 @@ export default function FeedRightSection({
   useEffect(() => {
     if (!currentUser) return;
     const friendships = supabase
-      .channel(`friendships${currentUser?.id}`)
+      .channel(`friendships${currentUser?.username}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },

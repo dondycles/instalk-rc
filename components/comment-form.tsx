@@ -1,4 +1,4 @@
-import comment from "@/app/actions/comment";
+import { comment } from "@/app/actions/comment";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -23,11 +23,9 @@ const commentSchema = z.object({
 export default function CommentForm({
   postId,
   commentId,
-  showComments,
 }: {
   postId: string;
   commentId?: string;
-  showComments: () => void;
 }) {
   const [expandInput, setExpandInput] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -45,7 +43,6 @@ export default function CommentForm({
     await comment(values);
     form.reset();
     setIsPending(false);
-    showComments();
     setExpandInput(false);
   }
 

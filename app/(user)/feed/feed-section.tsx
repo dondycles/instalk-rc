@@ -18,7 +18,7 @@ export default function FeedSection({ currentUser }: { currentUser?: user }) {
     isLoading: postsLoading,
     refetch: refetchPosts,
   } = useQuery({
-    queryKey: ["feed", currentUser?.id],
+    queryKey: ["feed", currentUser?.username],
     queryFn: async () => await getPosts(),
   });
 
@@ -27,7 +27,7 @@ export default function FeedSection({ currentUser }: { currentUser?: user }) {
   useEffect(() => {
     if (!currentUser) return;
     const channels = supabase
-      .channel(`posts${currentUser?.id}`)
+      .channel(`posts${currentUser?.username}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "posts" },

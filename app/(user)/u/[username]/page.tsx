@@ -25,13 +25,16 @@ Promise<Metadata> {
 
 export default async function UserPage({
   params,
+  searchParams,
 }: {
   params: { username: string };
+  searchParams: { tab: string };
 }) {
   const { data: currentUserData } = await getCurrentUser();
   return (
     <main className="px-4 h-full overflow-auto flex gap-4 justify-center ">
       <ProfileSection
+        tab={searchParams.tab}
         username={params.username}
         currentUser={currentUserData}
         isCurrentUserProfile={currentUserData?.username === params.username}

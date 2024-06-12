@@ -20,6 +20,18 @@ export async function getFriendship(user: z.infer<typeof UUID>) {
   return { data: data };
 }
 
+export async function getFriend(friendId: z.infer<typeof UUID>) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("users")
+    .select("id,fullname,username")
+    .eq("id", friendId)
+    .single();
+
+  if (error) return { error: error };
+  return { data: data };
+}
+
 export async function getFriends() {
   const supabase = createClient();
   const currentUser = (await supabase.auth.getUser()).data;
@@ -64,19 +76,13 @@ export async function getFriends() {
   return { data: newFriendshipList };
 }
 
-export async function getFriend(friendId: z.infer<typeof UUID>) {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("users")
-    .select("id,fullname,username")
-    .eq("id", friendId)
-    .single();
-
-  if (error) return { error: error };
-  return { data: data };
-}
-
 export async function getReceivedRequests() {
+  const newFriendshipList: {
+    username: string;
+    fullname: string;
+    id: z.infer<typeof UUID>;
+  }[] = [];
+
   const supabase = createClient();
   const currentUser = (await supabase.auth.getUser()).data;
   const { data, error } = await supabase
@@ -87,7 +93,70 @@ export async function getReceivedRequests() {
     );
 
   if (error) return { error: error };
-  return { data: data };
+  await Promise.all(
+    data.map(async (friendship) => {
+      const binds = friendship.binds as {
+        receiver: z.infer<typeof UUID>;
+        requester: z.infer<typeof UUID>;
+      };
+      let friendId: string;
+      if (binds.receiver === currentUser.user?.id) {
+        friendId = binds.requester;
+      } else if (binds.requester === currentUser.user?.id) {
+        friendId = binds.receiver;
+      } else {
+        return;
+      }
+
+      const { data, error } = await getFriend(friendId);
+      if (error || !data) return;
+
+      newFriendshipList.push(data);
+    })
+  );
+
+  return { data: newFriendshipList };
+}
+
+export async function getSentRequests() {
+  const newFriendshipList: {
+    username: string;
+    fullname: string;
+    id: z.infer<typeof UUID>;
+  }[] = [];
+  const supabase = createClient();
+  const currentUser = (await supabase.auth.getUser()).data;
+  const { data, error } = await supabase
+    .from("friendships")
+    .select("*")
+    .or(
+      `and(binds->>requester.eq.${currentUser.user?.id},is_accepted.eq.false)`
+    );
+
+  if (error) return { error: error };
+  await Promise.all(
+    data.map(async (friendship) => {
+      const binds = friendship.binds as {
+        receiver: z.infer<typeof UUID>;
+        requester: z.infer<typeof UUID>;
+      };
+      let friendId: string;
+      if (binds.receiver === currentUser.user?.id) {
+        friendId = binds.requester;
+      } else if (binds.requester === currentUser.user?.id) {
+        friendId = binds.receiver;
+      } else {
+        return;
+      }
+
+      const { data, error } = await getFriend(friendId);
+      if (error || !data) return;
+
+      newFriendshipList.push(data);
+    })
+  );
+
+  return { data: newFriendshipList };
 }
 
 export async function requestFriendship(user: z.infer<typeof UUID>) {

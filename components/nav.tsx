@@ -21,6 +21,8 @@ import { useDebounce } from "@/lib/useDebounce";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FaMessage } from "react-icons/fa6";
 import { user } from "@/lib/global";
+import { UserCircle } from "lucide-react";
+import FriendshipButtons from "./friendship-btns";
 export default function FeedNav({ currentUser }: { currentUser?: user }) {
   const [focused, setFocused] = useState(false);
   const queryClient = useQueryClient();
@@ -73,32 +75,32 @@ export default function FeedNav({ currentUser }: { currentUser?: user }) {
             onClick={() => setFocused(true)}
             onMouseOver={() => setFocused(true)}
             onMouseLeave={() => setFocused(false)}
-            className="fixed left-4 right-4  p-4 top-16 h-fit z-10 bg-white border rounded-md   "
+            className="fixed left-4 right-4  p-4 top-16 h-fit z-10 bg-white border rounded-md"
           >
             <p className="text-muted-foreground text-sm mb-4">results...</p>
             <ScrollArea className="max-h-[200px] w-full">
-              <div className="flex flex-col gap-4 overflow-auto h-full max-h-full">
+              <div className="flex flex-col gap-4 overflow-y-auto w-full h-full max-h-full">
                 {result?.length ? (
                   result?.map((res) => {
                     return (
-                      <Button
-                        key={res.id}
-                        asChild
-                        variant={"ghost"}
-                        className="gap-1"
-                      >
-                        <Link
-                          target="_parent"
-                          href={
-                            res.id === currentUser?.id
-                              ? "/profile"
-                              : "/u/" + res.id
-                          }
+                      <div key={res.id} className="flex flex-row gap-2 w-full">
+                        <Button
+                          asChild
+                          variant={"ghost"}
+                          className="gap-1 text-sm h-fit flex-1 min-w-0"
                         >
-                          <FaUserCircle className="text-2xl min-w-fit" />
-                          <p className="text-left w-full">{res.fullname}</p>
-                        </Link>
-                      </Button>
+                          <Link target="_parent" href={`/u/${res.username}`}>
+                            <UserCircle className="size-6 shrink-0" />
+                            <p className="text-left flex-1 font-bold truncate">
+                              {res.fullname}
+                            </p>
+                          </Link>
+                        </Button>
+                        <FriendshipButtons
+                          currentUser={currentUser}
+                          user={res}
+                        />
+                      </div>
                     );
                   })
                 ) : (

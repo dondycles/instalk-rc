@@ -17,6 +17,7 @@ import {
   UserCircle,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function FeedLeftSection({
@@ -33,7 +34,7 @@ export default function FeedLeftSection({
     refetch: refetchReceivedRequests,
   } = useQuery({
     enabled: Boolean(currentUser),
-    queryKey: ["receivedrequests", currentUser?.id],
+    queryKey: ["receivedrequests", currentUser?.username],
     queryFn: async () => await getReceivedRequests(),
   });
 
@@ -46,7 +47,7 @@ export default function FeedLeftSection({
   useEffect(() => {
     if (!currentUser) return;
     const friendships = supabase
-      .channel(`receivedrequests${currentUser?.id}`)
+      .channel(`receivedrequests${currentUser?.username}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "friendships" },
@@ -70,17 +71,20 @@ export default function FeedLeftSection({
       >
         <div className="gap-2 flex flex-col overflow-auto pb-4 w-full ">
           <Button
+            asChild
             variant={"ghost"}
             className={`mt-4 gap-1 h-fit w-full min-w-0   ${
               leftFeedSectionState.collapse ? "justify-center" : "justify-start"
             }`}
           >
-            <UserCircle className="size-10 shrink-0" />
-            {!leftFeedSectionState.collapse && (
-              <p className="text-left flex-1 font-bold truncate pr-[1px]">
-                {currentUser?.fullname}
-              </p>
-            )}
+            <Link href={`/u/${currentUser.username}`}>
+              <UserCircle className="size-10 shrink-0" />
+              {!leftFeedSectionState.collapse && (
+                <p className="text-left flex-1 font-bold truncate pr-[1px]">
+                  {currentUser?.fullname}
+                </p>
+              )}
+            </Link>
           </Button>
 
           <Button
@@ -97,26 +101,29 @@ export default function FeedLeftSection({
             )}
           </Button>
           <Button
+            asChild
             variant={"ghost"}
             className={`gap-1 justify-start relative ${
               leftFeedSectionState.collapse ? "justify-center" : "justify-start"
             }`}
           >
-            <Users className="shrink-0" />
-            {!leftFeedSectionState.collapse && (
-              <p className="text-left font-bold truncate pr-[1px]">
-                Friend Requests
-              </p>
-            )}
-            {receivedRequests?.data?.length !== 0 && (
-              <div
-                className={`bg-red-500 rounded-full aspect-square size-4 flex items-center justify-center text-white text-[10px] shrink-0 w-fit ${
-                  leftFeedSectionState.collapse ? "absolute -top-1 right-4" : ""
-                }`}
-              >
-                {receivedRequests?.data?.length}
-              </div>
-            )}
+            <Link href={`/u/${currentUser.username}?tab=friends`}>
+              <Users className="shrink-0" />
+              {!leftFeedSectionState.collapse && (
+                <p className="text-left font-bold truncate pr-[1px]">Friends</p>
+              )}
+              {receivedRequests?.data?.length !== 0 && (
+                <div
+                  className={`bg-red-500 rounded-full aspect-square size-4 flex items-center justify-center text-white text-[10px] shrink-0 w-fit ${
+                    leftFeedSectionState.collapse
+                      ? "absolute -top-1 right-4"
+                      : ""
+                  }`}
+                >
+                  {receivedRequests?.data?.length}
+                </div>
+              )}
+            </Link>
           </Button>
           <Button
             variant={"ghost"}
